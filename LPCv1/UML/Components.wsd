@@ -1,0 +1,44 @@
+@startuml
+usecase   Volttron_Message_Bus
+package "Model" {
+    [IoTFacade] <<Interface>>
+    [IoTDeviceGroup]
+    [Observer] <<Interface>>
+    [IoTDevice] <<Interface>>
+    [Smart_Plug]
+    [Smart_light]
+}
+
+package "Controller" {
+    [EMSController]
+    [ObserverSubject] <<Interface>>
+    [DeviceMonitor]
+    [ControlStrategy] <<Interface>>
+    [SimpleControl]
+}
+
+package "View" {
+    [Publish] <<Interface>>
+    [SendCommand]
+    [IoTMessage]
+}
+
+' [Controller] - [#Red][thickness=4] down-> [Model] : [1]
+' [Controller] - [#Green][thickness=2] down-> [View] : [2]
+' [Volttron_Message_Bus]- [#Blue][thickness=2] left->[Controller] :[3]
+
+
+[Controller] -down[#Red,thickness=2]-> [Model] : [1]
+[Controller] -[#Green,thickness=2]-> [View] : [2]
+[Volttron_Message_Bus]-left[#Blue,thickness=2]->[Controller] : [3]
+[View]-->[Volttron_Message_Bus] :[4]
+
+' [UserInterface] --> [SmartPlugController]
+' [SmartPlugController] --> [IOTDeviceFacade]
+' [SmartPlugController] --> [PriorityControlStrategy]
+' [PriorityControlStrategy] <|-- [SimplePriorityStrategy]
+' [IOTDeviceFacade] <|-- [IOTDeviceFacadeImpl]
+' [IOTDeviceFacadeImpl] --> [SmartPlug]
+' [IOTDeviceFacadeImpl] --> [SmartLight]
+' [PowerConsumptionMonitor] --> [SmartPlugController]
+@enduml

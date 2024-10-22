@@ -1,0 +1,195 @@
+@startuml
+skinparam linetype ortho
+
+interface Observer {
+    +update(power_consumption :int)
+}
+
+interface ObserverSubject {
+    +register_Observer(observer :Observer)
+    +remove_Observer(observer :Observer)
+    +notify_Observers()
+}
+
+interface IoTDevice {
+    +turn_On()
+    +turn_Off()
+    +get_Power_Consumption() :int
+    +set_Power_Consumption(power :int)
+    +get_Device_Id() :int
+    +set_Priority(priority :int)
+    +get_Priority() :int
+}
+
+interface IoTFacadeManager {
+    +group_By_Priority(key) : IoTDeviceGroup
+    +def clear_Groups_Stratgies()
+    +add_Group(group:IoTDeviceGroup)
+    +def remove_Group(group: IoTDeviceGroup)
+    +def execute_Strategy(message:any)
+    +def set_Group_Stratagy(group,controller)
+
+}
+
+interface ControlStrategy {
+    -controType:str
+    +execute(Devices: IoTDeviceGroup,cmd: any)
+}
+
+interface IoTFacade {
+    +turn_On(device_id :int)
+    +turn_Off(device_id :int)
+    +add_Device(device :IoTDevice)
+    +remove_Device(device :IoTDevice)
+    +get_Power_Consumption(device_id :int) :int
+    +set_Priority(device_id :int, priority :int)
+    +get_Priority(device_id :int) :int
+    +get_Devices() :dict
+    +all_On()
+    +all_Off()
+}
+
+interface Publish {
+    +publish(message :dict) :bool
+}
+
+interface FacadeRepository{
+    +add_Facade(facade :IoTDeviceGroup)
+    +get_Facade(facade :IoTDeviceGroup)
+    +update_Facade(facade :IoTDeviceGroup)
+    +remove_facade(facade :IoTDeviceGroup)
+}
+
+class GroupRepository{
+    +add_Facade(facade :IoTDeviceGroup)
+    +get_Facade(facade :IoTDeviceGroup)
+    +update_Facade(facade :IoTDeviceGroup)
+    +remove_facade(facade :IoTDeviceGroup)
+}
+
+
+class: IoTDeviceGroupManager {
+        -groups:list
+        -group_control_stratagey:dict
+        -sorted_groups:dict
+    +group_By_Priority(key) : IoTDeviceGroup
+    +def clear_Groups_Stratgies()
+    +add_Group(group:IoTDeviceGroup)
+    +def remove_Group(group: IoTDeviceGroup)
+    +def execute_Strategy(message:any)
+    +def set_Group_Stratagy(group,controller)
+} 
+
+
+class SmartPlug{
+    -id :int
+    -status :int
+    -power_consumption :int
+    -connected :int
+    -flagged :bool
+    -last_command :int
+    -priority :int
+    +turn_On()
+    +turn_Off()
+    +get_Power_Consumption() :int
+    +set_Power_Consumption(power :int)
+    +get_Device_Id() :int
+    +set_Priority(priority :int)
+    +get_Priority() :int
+    +update(power_consumption :int)
+    -check_Health()
+    +is_Flaged() : bool
+    +publish() : bool
+}
+
+class IoTDeviceGroup{
+    -devices :dict<<str:IoTDevice>>
+    +turn_On(device_id :int)
+    +turn_Off(device_id :int)
+    +get_Power_Consumption(device_id :int) :int
+    +set_Priority(device_id :int, priority :int)
+    +get_Priority(device_id :int) :int
+    +add_Device(device :IoTDevice)
+    +remove_Device(device :IoTDevice)
+    +get_Devices() :dict
+    +all_On()
+    +all_Off()
+}
+
+class DeviceMonitor{
+    -message
+    -observers: dict
+    -notificationObserverID
+    -emscontroller
+    +register_Observer(observer :Observer)
+    +remove_Observer(observer :Observer)
+    +process_Message(message:any): IoTMessage:
+    +set_EMS_Controller(emscontroller: EMSControl)
+}
+
+class SimpleControl{
+    -controType:str
+    +execute(Devices: IoTDeviceGroup,cmd: any)
+}
+
+class DirectControl{
+    -controType:str
+    +execute(Devices: IoTDeviceGroup,cmd: any)
+}
+
+class SheddingControl{
+    -controType:str
+    +execute(Devices: IoTDeviceGroup,cmd: any)
+}
+
+class IncrementalControl{
+    -controType:str
+    +execute(Devices: IoTDeviceGroup)
+}
+
+class EMSControl{
+    -controlstratagey: dict
+    -devicegroup: dict
+    +execute_Strategy(message:any)
+}
+
+class send{
+   +publish(message :dict) :bool
+}
+
+class IoTMessage{
+    device_id: str
+    message_type: str
+    payload: Dict[str, any]
+    timestamp: datetime 
+    priority: Optional[int]
+}
+
+class class SmartPlugDataService{
+    +create_and_store_smart_plug_json(group: IoTDeviceGroup )
+}
+
+' Relationships
+SimpleControl -|> ControlStrategy
+DirectControl -|> ControlStrategy
+SheddingControl -|> ControlStrategy
+IncrementalControl -|> ControlStrategy
+SmartPlug -|> Observer
+SmartPlug -|> IoTDevice
+IoTDeviceGroup -|> IoTFacade
+IoTDeviceGroup *- IoTDevice
+DeviceMonitor -|> ObserverSubject
+EMSControl *- IoTFacade
+EMSControl *- ControlStrategy
+send *- IoTMessage
+SmartPlug *- IoTMessage
+send -|> Publish
+SmartPlug *- send
+SimpleControl *- IoTDeviceGroup
+DeviceMonitor *- Observer
+IoTDeviceGroupManager -|> IoTFacadeManager
+IoTDeviceGroupManager *- IoTDeviceGroup
+GroupRepository -|> FacadeRepository
+SmartPlugDataService *- GroupRepository
+
+@enduml
